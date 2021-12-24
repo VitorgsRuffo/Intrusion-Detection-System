@@ -1,0 +1,8 @@
+Building a semi-supervised regression MLP model implementing an Anomaly-based IDS....
+		
+
+model1: 6-output-neuron model IDS .  (precision: 85%, recall: 98%)
+				
+
+
+model2: 6-model IDS (each for each dimension). (precision: 85%, recall: 98%)
