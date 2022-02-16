@@ -15,15 +15,17 @@
 # (comportamento real fora do threshold) um alarme é soado para o gerente da rede, indicando uma anomalia.
 #
 
+
 from numpy.core.numeric import zeros_like
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import tensorflow as tf
+from keras import callbacks
 from keras.models import Sequential, load_model
-from keras.layers import Dense, Dropout
+from keras.layers import Dense, Dropout, GRU
 
-from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import mean_squared_error
@@ -34,6 +36,17 @@ from pickle import dump, load
 
 sys.path.insert(1, '../../../../')
 from ImportTrafficData import ImportTrafficData
+
+def plot_training_metrics_graph(history, metric):
+    plt.figure(figsize = (10, 6))
+    plt.plot(history.history[metric])
+    plt.plot(history.history['val_'+metric])
+    plt.title(f'Train {metric} vs Validation {metric}')
+    plt.xlabel("epoch")
+    plt.ylabel(metric)
+    plt.legend([metric, 'val_'+metric], loc='upper right')
+    plt.show()
+
 
 def plot_prediction_real_graph(graph_name: str, save_path: str, predicted_data, real_data, attack_intervals: list):
     features_names = ['bytes', 'dst_ip_entropy', 'dst_port_entropy',
@@ -131,11 +144,17 @@ except FileNotFoundError:
 #
 #
 dia_sem_ataque_x, dia_sem_ataque_y,\
-dia_sem_ataque_rotulo = ImportTrafficData.in_regression_model_20_sec_format('../../../../../Data/orion/051218_60h6sw_c1_ht5_it0_V2_csv', [])
+dia_sem_ataque_rotulo = ImportTrafficData.in_gru_regression_model_20_sec_format('../../../../../Data/orion/051218_60h6sw_c1_ht5_it0_V2_csv', [])
+
+train_x, train_y = dia_sem_ataque_x[0:69000], dia_sem_ataque_y[0:69000]
+print(train_x.shape)
+validation_x, validation_y = dia_sem_ataque_x[69000:], dia_sem_ataque_y[69000:]
+
+print(dia_sem_ataque_x.shape)
 
 
 dia_1_x, dia_1_y,\
-dia_1_rotulo = ImportTrafficData.in_regression_model_20_sec_format('../../../../../Data/orion/051218_60h6sw_c1_ht5_it0_V2_csv_ddos_portscan',
+dia_1_rotulo = ImportTrafficData.in_gru_regression_model_20_sec_format('../../../../../Data/orion/051218_60h6sw_c1_ht5_it0_V2_csv_ddos_portscan',
                                                             # Os ataques acontecem nesses horários:
                                                             [('10:15:00', '11:30:00'),
                                                              ('13:25:00', '14:35:00')])
@@ -143,13 +162,13 @@ dia_1_rotulo = ImportTrafficData.in_regression_model_20_sec_format('../../../../
 
 
 dia_2_x, dia_2_y,\
-dia_2_rotulo = ImportTrafficData.in_regression_model_20_sec_format('../../../../../Data/orion/171218_60h6sw_c1_ht5_it0_V2_csv_portscan_ddos',
+dia_2_rotulo = ImportTrafficData.in_gru_regression_model_20_sec_format('../../../../../Data/orion/171218_60h6sw_c1_ht5_it0_V2_csv_portscan_ddos',
                                                             [('09:45:00', '11:10:00'),
                                                              ('17:37:00', '18:55:00')])
 
 
 dia_3_x, dia_3_y,\
-dia_3_rotulo = ImportTrafficData.in_regression_model_20_sec_format('../../../../../Data/orion/120319_60h6sw_c1_ht5_it0_V2_csv_portscan_ddos',
+dia_3_rotulo = ImportTrafficData.in_gru_regression_model_20_sec_format('../../../../../Data/orion/120319_60h6sw_c1_ht5_it0_V2_csv_portscan_ddos',
                                                             [('09:29:00', '10:44:00'),
                                                              ('16:16:00', '17:50:00')])
 
@@ -163,21 +182,31 @@ if sys.argv.count("-t"):
 
     # Passo 2.1, configurando o modelo:
     model = Sequential()
-    model.add(Dense(16, input_dim=120, activation='sigmoid'))
-    # A função de ativação vazia representa a função de ativação linear: y = x
-    model.add(Dense(6, activation=None))
+    model.add(GRU(units=64, activation="tanh", recurrent_activation="sigmoid", input_shape=[dia_sem_ataque_x.shape[1], dia_sem_ataque_x.shape[2]]))
+    #model.add(Dropout(0.2))
+    #model.add(GRU(units=64))
+    model.add(Dropout(0.2)) 
+    model.add(Dense(units=6, activation=None))
+
     # A função de perda também deve ser apropriada para modelos de regressão
-    model.compile(loss='mse', optimizer='adam', metrics=['mse'])
+    model.compile(loss='mse', optimizer='adam', metrics=['mse', 'accuracy'])
 
     # Passo 2.2, treinando o modelo:
     # O modelo vai aprender a prever
-    model.fit(
-        x=dia_sem_ataque_x,
-        y=dia_sem_ataque_y,
-        #validation_data=(x, y),
-        batch_size=60,
-        epochs=10
+    early_stop = callbacks.EarlyStopping(monitor='val_loss', patience=10)
+
+    history = model.fit(
+        x=train_x,
+        y=train_y,
+        validation_data=(validation_x, validation_y),
+        batch_size=16,
+        epochs=10,
+        callbacks=[early_stop]
     )
+
+    plot_training_metrics_graph(history, 'mse')
+    plot_training_metrics_graph(history, 'accuracy')
+    plot_training_metrics_graph(history, 'loss')
 
     model.save('./model')
 
