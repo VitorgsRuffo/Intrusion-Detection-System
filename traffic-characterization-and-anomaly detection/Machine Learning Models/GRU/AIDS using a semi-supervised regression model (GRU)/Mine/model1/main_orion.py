@@ -25,10 +25,9 @@ from keras import callbacks
 from keras.models import Sequential, load_model
 from keras.layers import Dense, Dropout, GRU
 
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import classification_report
+#from sklearn.model_selection import train_test_split
+#from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
-from sklearn.metrics import mean_squared_error
 
 import os
 import sys
@@ -45,7 +44,8 @@ def plot_training_metrics_graph(history, metric):
     plt.xlabel("epoch")
     plt.ylabel(metric)
     plt.legend([metric, 'val_'+metric], loc='upper right')
-    plt.show()
+    plt.tight_layout()
+    plt.savefig("./model_"+metric+".jpg", format='jpg', dpi=800)
 
 
 def plot_prediction_real_graph(graph_name: str, save_path: str, predicted_data, real_data, attack_intervals: list):
@@ -85,7 +85,7 @@ def plot_prediction_real_graph(graph_name: str, save_path: str, predicted_data, 
             #plots[i][j].set_ylim([0, y])
             plots[i][j].ticklabel_format(axis="y", style="sci", scilimits=(0,0))
         else:
-            plots[i][j].set_ylim([-25, 15])
+            plots[i][j].set_ylim([-1, 2])
 
     plt.tight_layout()
     plt.savefig(save_path, format='jpg', dpi=800)
@@ -147,10 +147,8 @@ dia_sem_ataque_x, dia_sem_ataque_y,\
 dia_sem_ataque_rotulo = ImportTrafficData.in_gru_regression_model_20_sec_format('../../../../../Data/orion/051218_60h6sw_c1_ht5_it0_V2_csv', [])
 
 train_x, train_y = dia_sem_ataque_x[0:69000], dia_sem_ataque_y[0:69000]
-print(train_x.shape)
 validation_x, validation_y = dia_sem_ataque_x[69000:], dia_sem_ataque_y[69000:]
 
-print(dia_sem_ataque_x.shape)
 
 
 dia_1_x, dia_1_y,\
@@ -183,13 +181,11 @@ if sys.argv.count("-t"):
     # Passo 2.1, configurando o modelo:
     model = Sequential()
     model.add(GRU(units=64, activation="tanh", recurrent_activation="sigmoid", input_shape=[dia_sem_ataque_x.shape[1], dia_sem_ataque_x.shape[2]]))
-    #model.add(Dropout(0.2))
-    #model.add(GRU(units=64))
-    model.add(Dropout(0.2)) 
-    model.add(Dense(units=6, activation=None))
+    model.add(Dropout(0.2))
+    model.add(Dense(units=6, activation="sigmoid"))
 
     # A função de perda também deve ser apropriada para modelos de regressão
-    model.compile(loss='mse', optimizer='adam', metrics=['mse', 'accuracy'])
+    model.compile(loss='mse', optimizer='adam', metrics=['accuracy'])
 
     # Passo 2.2, treinando o modelo:
     # O modelo vai aprender a prever
@@ -198,15 +194,14 @@ if sys.argv.count("-t"):
     history = model.fit(
         x=train_x,
         y=train_y,
-        validation_data=(validation_x, validation_y),
+       #validation_data=(validation_x, validation_y),
         batch_size=16,
         epochs=10,
         callbacks=[early_stop]
     )
 
-    plot_training_metrics_graph(history, 'mse')
-    plot_training_metrics_graph(history, 'accuracy')
-    plot_training_metrics_graph(history, 'loss')
+    #plot_training_metrics_graph(history, 'loss')
+    #plot_training_metrics_graph(history, 'accuracy')
 
     model.save('./model')
 
@@ -236,8 +231,8 @@ previsao = model.predict(dia_2_x) # shape: (86380, 6)
 # conseguindo realizar previsões proximas da realidade.
 #
 
-plot_prediction_real_graph("Prediction-real graph:\n171218_60h6sw_c1_ht5_it0_V2_csv_portscan_ddos - MLP with a 6-neuron output layer", 
-                           "./171218_60h6sw_c1_ht5_it0_V2_csv_portscan_ddos_1mlp6nol_prediction_real_graph.jpg",
+plot_prediction_real_graph("Prediction-real graph:\n171218_60h6sw_c1_ht5_it0_V2_csv_portscan_ddos - GRU with a 6-neuron output layer", 
+                           "./171218_60h6sw_c1_ht5_it0_V2_csv_portscan_ddos_1gru6nol_prediction_real_graph.jpg",
                            previsao, dia_2_y, [('09:45:00', '11:10:00'), ('17:37:00', '18:55:00')])
 
 
@@ -307,8 +302,8 @@ previsao = model.predict(dia_1_x) # shape: (86395, 6)
 # Assim, podemos vizualizar se a caracterização do modelo esta boa. Isto é, se ele esta
 # conseguindo realizar previsões proximas da realidade.
 #
-plot_prediction_real_graph("Prediction-real graph:\n051218_60h6sw_c1_ht5_it0_V2_csv_ddos_portscan - MLP with a 6-neuron output layer", 
-                           "./051218_60h6sw_c1_ht5_it0_V2_csv_ddos_portscan_1mlp6nol_prediction_real_graph.jpg",
+plot_prediction_real_graph("Prediction-real graph:\n051218_60h6sw_c1_ht5_it0_V2_csv_ddos_portscan - GRU with a 6-neuron output layer", 
+                           "./051218_60h6sw_c1_ht5_it0_V2_csv_ddos_portscan_1gru6nol_prediction_real_graph.jpg",
                            previsao, dia_1_y, [('10:15:00', '11:30:00'), ('13:25:00', '14:35:00')])
 #
 # 4.1.2 Detecção:
@@ -348,8 +343,8 @@ previsao = model.predict(dia_3_x) # shape: (86380, 6)
 # Assim, podemos vizualizar se a caracterização do modelo esta boa. Isto é, se ele esta
 # conseguindo realizar previsões proximas da realidade.
 #
-plot_prediction_real_graph("Prediction-real graph:\n120319_60h6sw_c1_ht5_it0_V2_csv_portscan_ddos - MLP with a 6-neuron output layer", 
-                           "./120319_60h6sw_c1_ht5_it0_V2_csv_portscan_ddos_1mlp6nol_prediction_real_graph.jpg",
+plot_prediction_real_graph("Prediction-real graph:\n120319_60h6sw_c1_ht5_it0_V2_csv_portscan_ddos - GRU with a 6-neuron output layer", 
+                           "./120319_60h6sw_c1_ht5_it0_V2_csv_portscan_ddos_1gru6nol_prediction_real_graph.jpg",
                            previsao, dia_3_y, [('09:29:00', '10:44:00'), ('16:16:00', '17:50:00')])
 #
 # 4.2.2 Detecção:

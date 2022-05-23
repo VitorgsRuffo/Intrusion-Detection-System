@@ -1,0 +1,177 @@
+Objetivo: 1. preprocessar o dataset com as abordagens start e duration based. 
+          2. rodar a GRU com os dois conjuntos de dados resultantes. 
+          3. analisar a diferença na caracterização e detecção.
+            - existe algum padrao nos pontos que o modelo erra?
+            - fazer alguma mudança no script duration?
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------
+ORION_1o:
+
+    1. V
+    2. V
+    3. V
+
+        RESULTADOS:
+
+        (1) (orion_x_based_05)
+
+            dia_sem_ataque = np.array(pd.read_csv(filename+'051218_preprocessed.csv'))
+            dia_1_com_ataque = np.array(pd.read_csv(filename+'051218_portscan_preprocessed.csv'))
+            dia_2_com_ataque = np.array(pd.read_csv(filename+'171218_portscan_ddos_preprocessed.csv'))
+
+        START-BASED:
+
+                Melhor limiar fuzzy:  0.0051
+                Mathew coeficient do melhor threshold:  0.9909658210282629
+                f1 do threshold com melhor mathew coeficient:  0.9918350802015171
+                [[77684     3]
+                 [  138  8564]]
+
+                Resultados teste:
+                precision teste:  0.9998964910464755
+                recall teste:  0.9875281128603558
+                F1 teste:  0.9936738157691715
+                Matthew Coef:  0.992896098144209
+                [[76606     1]
+                 [  122  9660]]
+    
+                [[TN     FP]
+                 [FN     TP]]         
+
+
+         DURATION-BASED:
+
+                Melhor limiar fuzzy:  0.0001
+                Mathew coeficient do melhor threshold:  0.7188342112176613
+                f1 do threshold com melhor mathew coeficient:  0.7047109525932532
+                [[77673    14]
+                 [ 3960  4742]]
+
+                Resultados teste:
+                precision teste:  0.9976714648602879
+                recall teste:  0.48180331220609285
+                F1 teste:  0.6498000827243899
+                Matthew Coef:  0.671298165051706
+                [[76596    11]
+                 [ 5069  4713]]
+
+
+
+
+        (2) (orion_x_based_12)
+            dia_sem_ataque = np.array(pd.read_csv(filename+'051218_preprocessed.csv'))
+            dia_1_com_ataque = np.array(pd.read_csv(filename+'120319_portscan_ddos_preprocessed.csv'))
+            dia_2_com_ataque = np.array(pd.read_csv(filename+'171218_portscan_ddos_preprocessed.csv'))
+
+            START-BASED:
+
+                Melhor limiar fuzzy:  0.0051
+                Mathew coeficient do melhor threshold:  0.9875575900149483
+                f1 do threshold com melhor mathew coeficient:  0.9889365095185886
+                [[76245     2]
+                 [  220  9922]]
+
+                Resultados teste:
+                precision teste:  0.999891292531797
+                recall teste:  0.9402985074626866
+                F1 teste:  0.9691797060218114
+                Matthew Coef:  0.9659551107872135
+                [[76606     1]
+                 [  584  9198]]
+    
+
+             [[TN     FP]
+              [FN     TP]]         
+
+
+            DURATION-BASED:
+                Melhor limiar fuzzy:  0.0001
+                Mathew coeficient do melhor threshold:  0.7388936571979565
+                f1 do threshold com melhor mathew coeficient:  0.7323311084773251
+                [[76228    19]
+                 [ 4272  5870]]
+
+                Resultados teste:
+                precision teste:  0.9965971926839643
+                recall teste:  0.4790431404620732
+                F1 teste:  0.6470588235294118
+                Matthew Coef:  0.6688296343057829
+                [[76591    16]
+                 [ 5096  4686]]
+
+
+                  - Conclusão duration-based: 
+                    com base nos plots e metricas: o modelo caracterica bem o trafego, mas ele não erra como deveria em alguns momentos de ataque.
+                    Não errando a previsao em certos momentos de ataque ele não vai detectar anomalias nesses momentos, fazendo os falsos negativos subirem 
+                    e o recall cair. Um ponto a destacar é que o modelo tem um bom precision, quando ele marca um segundo como
+                    anomalo ele tende a acertar.
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------
+ORION_2o:
+
+    1. V
+    2. V
+    3. V
+
+        RESULTADOS:
+
+            START-BASED:
+
+                Melhor limiar fuzzy:  0.0051
+                Mathew coeficient do melhor threshold:  0.9990109772202489
+                f1 do threshold com melhor mathew coeficient:  0.9991070897077207
+                [[77982     5]
+                 [   10  8392]]
+
+                Resultados teste:
+                precision teste:  0.9995683142672135
+                recall teste:  0.9956998494947323
+                F1 teste:  0.9976303317535545
+                Matthew Coef:  0.9973473608641962
+                [[77083     4]
+                 [   40  9262]]
+
+
+            DURATION-BASED:
+            
+                Melhor limiar fuzzy:  0.0001
+                Mathew coeficient do melhor threshold:  0.7269627992044734
+                f1 do threshold com melhor mathew coeficient:  0.715587967183227
+                [[77935    52]
+                 [ 3692  4710]]
+
+                Resultados teste:
+                precision teste:  0.989628349178911
+                recall teste:  0.49236723285314987
+                F1 teste:  0.6575735821966978
+                Matthew Coef:  0.6769374348629735
+                [[77039    48]
+                 [ 4722  4580]]
+
+
+
+
+
+
+            
+                  - Conclusão duration-based: 
+                    com base nos plots e metricas: o modelo caracterica bem o trafego, mas ele não erra como deveria em alguns momentos de ataque.
+                    Não errando a previsao em certos momentos de ataque ele não vai detectar anomalias nesses momentos, fazendo os 
+                    falsos negativos subirem e o recall cair. Um ponto a destacar é que o modelo tem um bom precision, quando ele marca um segundo como
+                    anomalo ele tende a acertar.
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------
+CIC:
+
+    1. 
+    2. 
+    3. 
+        RESULTADOS:
+        
+            START-BASED:
+        
+        
+        
+            DURATION-BASED:
+        
+------------------------------------------------------------------------------------------------------------------------------------------------------------

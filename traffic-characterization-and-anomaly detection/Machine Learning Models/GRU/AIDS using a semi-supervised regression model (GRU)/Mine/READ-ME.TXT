@@ -1,6 +1,7 @@
 Building a semi-supervised regression GRU model implementing an Anomaly-based IDS....
-		
 
-model1: 6-output-neuron model IDS .  (precision: 85%, recall: 98%)
+model1: 6-output-neuron model IDS .  (precision: %, recall: %, f1: )
 				
+model2: 6-model IDS (each for each dimension). (precision: %, recall: %, f1: )
 
+ps: with a window of 20 seconds.	
